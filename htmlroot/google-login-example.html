@@ -1,0 +1,28 @@
+<html>
+  <script>
+    function onSignIn(response) {
+	var url_string = window.location.href;
+	var url = new URL(url_string);
+	var redir_url = url.searchParams.get("r");
+	console.log("got creds, redirecting to " + redir_url);
+	document.cookie = "circlemud_login_creds=" + response.credential;
+	window.location.href = redir_url;
+    }
+  </script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <body>
+      <div id="g_id_onload"
+         data-client_id="your-client-id.googleusercontent.com",
+         data-callback="onSignIn"
+         data-auto_prompt="true">
+      </div>
+      <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+      </div>
+  </body>
+</html>

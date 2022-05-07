@@ -1,0 +1,6 @@
+---
+listen-port: 17000
+oauth-client-id: your-clien.apps.googleusercontent.com
+authorized-users:
+   - person@example.com
+   - person2@example.com
