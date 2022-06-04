@@ -76,6 +76,13 @@ the auth flow. If found, it's verified using Google's oauth2 Python library, and
 the email address it contains is checked against the list of allowed
 addresses. If found, it returns 200. If not found, it returns 403.
 
+If the JWT is valid, the authorizer also re-encrypts the email address again
+using its own private key and sends the encrypted email back to the client as a
+new cookie. I wanted this extra step because Google's JWT expires after one
+hour, less than the length of a typical movie, and my use-case was serving
+video. The authorizer's own tokens never expire. (This may be a security hazard
+depending on what you're protecting.)
+
 The authorizer is implemented as a
 [CherryPy](https://docs.cherrypy.dev/en/latest/) web service. A command-line
 option specifies a location of a configuration file. The repo contains an
@@ -86,8 +93,13 @@ option specifies a location of a configuration file. The repo contains an
   
 * The Google API Client ID you created in the first step
 
+* A secret key used to encrypt and decrypt tokens sent to clients. Generate a
+  key by typing into Python
+
+     python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'
+
 * A list of email addresses that are allowed
 
 You must also arrange to ahve the auth program run, e.g, by adding it to systemd
-using a configuration file such as [this one]().
+using a configuration file such as [this one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/videoauth.service).
 

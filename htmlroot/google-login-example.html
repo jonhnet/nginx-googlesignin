@@ -5,7 +5,7 @@
 	var url = new URL(url_string);
 	var redir_url = url.searchParams.get("r");
 	console.log("got creds, redirecting to " + redir_url);
-	document.cookie = "circlemud_login_creds=" + response.credential;
+	document.cookie = "circlemud_goog_creds=" + response.credential;
 	window.location.href = redir_url;
     }
   </script>
