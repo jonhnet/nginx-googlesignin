@@ -96,7 +96,7 @@ option specifies a location of a configuration file. The repo contains an
 * A secret key used to encrypt and decrypt tokens sent to clients. Generate a
   key by typing into Python
 
-     python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'
+     `python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'`
 
 * A list of email addresses that are allowed
 
