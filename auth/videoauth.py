@@ -80,6 +80,7 @@ def main():
         'server.socket_port': config['listen-port'],
         'server.socket_timeout': 30,
         'tools.proxy.on': True,
+        'engine.autoreload.on': False,
     })
 
     cherrypy.quickstart(VideoAuth(config), '/auth')
