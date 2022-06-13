@@ -5,9 +5,9 @@ StartLimitIntervalSec=0
 [Service]
 Restart=always
 RestartSec=30
-ExecStart=/home/jelson/projects/videoserver/auth/videoauth.py --config /home/jelson/.config/videoserver/config.yaml
+ExecStart=uwsgi --ini /home/jelson/projects/videoserver/conf/uwsgi-videoauth.conf --stats 127.0.0.1:9191
 User=jelson
 
 [Install]
 WantedBy=multi-user.target
-Alias=videoserver-auth.service
+

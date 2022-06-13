@@ -18,9 +18,10 @@ def say(s):
     sys.stdout.flush()
 
 class VideoAuth():
-    def __init__(self, config):
-        self.config = config
-        self._cred_encryptor = Fernet(config['private-cred-key'])
+    def __init__(self, args):
+        self.args = args
+        self.config = yaml.safe_load(open(args.config_file))
+        self._cred_encryptor = Fernet(self.config['private-cred-key'])
 
     def _get_cookies(self):
         # Google one-tap login sets a cookie called "g_state" with a
@@ -129,7 +130,7 @@ class VideoAuth():
             cherrypy.response.status = 401
             return "No auth data"
 
-def main():
+def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c", "--config-file",
@@ -137,8 +138,9 @@ def main():
         action='store',
         required=True,
     )
-    args = parser.parse_args()
-    config = yaml.safe_load(open(args.config_file))
+    return parser.parse_args()
+
+def run_server(args):
     cherrypy.config.update({
         'server.socket_host': '::',
         'server.socket_port': config['listen-port'],
@@ -147,6 +149,16 @@ def main():
         'engine.autoreload.on': False,
     })
 
-    cherrypy.quickstart(VideoAuth(config), '/auth')
+    cherrypy.quickstart(VideoAuth(args), '/auth')
 
-main()
+
+### main
+
+args = get_args()
+
+if __name__ == "__main__":
+    run_server(args)
+
+def application(environ, start_response):
+    cherrypy.tree.mount(VideoAuth(args), '/auth')
+    return cherrypy.tree(environ, start_response)
