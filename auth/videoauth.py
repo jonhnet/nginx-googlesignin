@@ -107,6 +107,8 @@ class VideoAuth():
                 if self._private_cred_is_valid(private_cred):
                     cherrypy.response.cookie[PRIVATE_CRED_COOKIE] = private_cred
                     cherrypy.response.cookie[PRIVATE_CRED_COOKIE]['path'] = '/'
+                    # Expire cookie after a year
+                    cherrypy.response.cookie[PRIVATE_CRED_COOKIE]['max-age'] = 60 * 60 * 24 * 365
                     return True
                 else:
                     return False
