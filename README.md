@@ -90,7 +90,7 @@ option specifies a location of a configuration file. The repo contains an
 
 * The port number on which to listen (default is 17000; it must match the proxy
   statement in the nginx.conf).
-  
+
 * The Google API Client ID you created in the first step
 
 * A secret key used to encrypt and decrypt tokens sent to clients. Generate a
@@ -100,6 +100,5 @@ option specifies a location of a configuration file. The repo contains an
 
 * A list of email addresses that are allowed
 
-You must also arrange to ahve the auth program run, e.g, by adding it to systemd
+You must also arrange to have the auth program run, e.g, by adding it to systemd
 using a configuration file such as [this one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/videoauth.service).
-
