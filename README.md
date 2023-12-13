@@ -32,7 +32,7 @@ should be included inside any nginx `location` block whose contents should only
 be viewed by authorized users. The second,
 [nginx-provides-auth-snippet](https://github.com/jelson/nginx-googlesignin/blob/main/conf/nginx-provides-auth-snippet.conf),
 should be included in the `server` block of any server that uses the `requires`
-snippet. Here's a complete working example:
+snippet. Here's a complete working example demonstrating how to use the snippets:
 
 ```
 server {
@@ -58,26 +58,22 @@ server {
 }
 ```
 
-The `requires_auth` snippet adds an `auth_request` directive, meaning any
-request first gets passed to the authorizing URL to ensure accessed is
-allowed. Details of this nginx feature can be found
-[here](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html). The
-authorizing program is the Python program in this repo.
-
-  * If the authorizer returns 200, access is allowed.
-
-  * If the authorizer returns an http 401 error, it means no credentials were
-    found and the login flow should start; nginx is configured to generate a
-    redirect to the static page `/googleauth/google-login.html`. It also sets the URL
-    argument `r` to be the original URL on which access was attempted, and where
-    the client will be redirected after auth is complete.
-
-  * If the auth program returns 403, that means the login flow has been
-    completed and we've decided the user is not allowed. The static page
-    `/googleauth/not-authorized.html` is returned.
-
 To adapt the example to your site, change the path of the `include` directives
 to reflect where this repo is checked out on your system.
+
+The `nginx-provides-auth-snippet.conf` itself must also be customized to reflect
+the absolute path to your checkout of this repository. It contains the following
+stanza:
+
+```
+# Change to where the "htmlroot" directory from this repo lives on your system
+location /googleauth {
+    alias /home/jelson/projects/nginx-googleauth/htmlroot;
+}
+```
+
+Change the `alias` path to match where the location of this repository's
+`htmlroot` directory on your system.
 
 ### Google login flow
 
@@ -95,20 +91,7 @@ stored in the request's cookie.
 The example Google login page must be changed to include the Google API Client
 ID you created in the first step. Then rename the file `google-login.html`.
 
-### authorizer and its config file
-
-The Python authorizer script looks for JSON Web Token in the client's
-cookiejar. If it's not found, it returns an HTTP 401, which tells nginx to start
-the auth flow. If found, it's verified using Google's oauth2 Python library, and
-the email address it contains is checked against the list of allowed
-addresses. If found, it returns 200. If not found, it returns 403.
-
-If the JWT is valid, the authorizer also re-encrypts the email address again
-using its own private key and sends the encrypted email back to the client as a
-new cookie. I wanted this extra step because Google's JWT expires after one
-hour, less than the length of a typical movie, and my use-case was serving
-video. The authorizer's own tokens never expire. (This may be a security hazard
-depending on what you're protecting.)
+### The authorizer program and its config file
 
 The authorizer is implemented as a
 [CherryPy](https://docs.cherrypy.dev/en/latest/) web service. A command-line
@@ -130,5 +113,69 @@ option specifies a location of a configuration file. The repo contains an
 
 Place the config file somewhere accessible. In my example, it's in `~/.config/nginx-googleauth/config.yaml`.
 
-You must also arrange to have the auth program run, e.g, by adding it to systemd
-using a configuration file such as [this one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth.service).
+Arrange to have the auth program run, e.g, by adding it to systemd using a
+configuration file such as [this
+one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth.service).
+
+### Troubleshooting
+
+After all the steps above, restart nginx and everything should work! When you
+visit your newly protected site for the first time, you should get a popup
+asking you to complete the Google login flow. Once complete, the site will
+operate normally. Your browser will get a cookie indicating you've completed the
+auth so future visits to the site will not have to reauthorize.
+
+If you do not get a Google login popup, ensure the requires-auth snippet is in
+the same `location` block nginx is using to serve the protected content.
+
+If you get a 500 error, make sure `googleauth.py` is running. Use `netstat` to
+ensure it's listening on the same port that the nginx requires-auth snippet is
+expecting. Try to connect to the authorizer manually using wget:
+
+```
+TORG:/etc/nginx/sites-available(226074) wget http://localhost:17000/check_auth
+--2023-12-13 14:46:40--  http://localhost:17000/check_auth
+Resolving localhost (localhost)... ::1, 127.0.0.1
+Connecting to localhost (localhost)|::1|:17000... connected.
+HTTP request sent, awaiting response... 401 Unauthorized
+```
+
+If you see 401 Unauthorized, that means it's working. 404 means it is not
+configured properly.
+
+If you get a Google login popup but the contents are blank, it means the URL of
+your web page was not in the list of allowed URLs when you created the Google
+Client ID at the Google Cloud Platform console. (See step 1.)
+
+## Internal details
+
+The `requires_auth` snippet adds an `auth_request` directive, meaning any
+request first gets passed to the authorizing URL to ensure accessed is
+allowed. Details of this nginx feature can be found
+[here](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html). The
+authorizing program is the Python program in this repo.
+
+  * If the authorizer returns 200, access is allowed.
+
+  * If the authorizer returns an http 401 error, it means no credentials were
+    found and the login flow should start; nginx is configured to generate a
+    redirect to the static page `/googleauth/google-login.html`. It also sets the URL
+    argument `r` to be the original URL on which access was attempted, and where
+    the client will be redirected after auth is complete.
+
+  * If the auth program returns 403, that means the login flow has been
+    completed and we've decided the user is not allowed. The static page
+    `/googleauth/not-authorized.html` is returned.
+
+The Python authorizer script looks for JSON Web Token in the client's
+cookiejar. If it's not found, it returns an HTTP 401, which tells nginx to start
+the auth flow. If found, it's verified using Google's oauth2 Python library, and
+the email address it contains is checked against the list of allowed
+addresses. If found, it returns 200. If not found, it returns 403.
+
+If the JWT is valid, the authorizer also re-encrypts the email address again
+using its own private key and sends the encrypted email back to the client as a
+new cookie. I wanted this extra step because Google's JWT expires after one
+hour, less than the length of a typical movie, and my use-case was serving
+video. The authorizer's own tokens never expire. (This may be a security hazard
+depending on what you're protecting.)
