@@ -75,21 +75,16 @@ location /googleauth {
 Change the `alias` path to match where the location of this repository's
 `htmlroot` directory on your system.
 
-### Google login flow
+### Google login page
 
-The Google login page (example [here](https://github.com/jelson/nginx-googlesignin/blob/main/htmlroot/google-login-example.html)) creates a google signin popup that
-calls a Javascript callback to `onSignIn` when the auth flow is complete.  For
-details, see Google's documentation
-[here](https://developers.google.com/identity/sign-in/web) and
-[here](https://developers.google.com/identity/gsi/web/guides/display-button).
+Create the login page. A simple
+[example](https://github.com/jelson/nginx-googlesignin/blob/main/htmlroot/google-login-example.html)
+is included which does nothing but create a Google login popup.
 
-When the auth-complete callback is invoked, it stores the JSON Web Token in a
-cookie and redirects the client back to the URL in the `r` parameter. This will
-end up invoking the authorizer again -- but this time with JWT's credentials
-stored in the request's cookie.
+Make a copy of the example named `google-login.html`. Change the Google API
+Client ID in your copy to be the one you created in the first step.
 
-The example Google login page must be changed to include the Google API Client
-ID you created in the first step. Then rename the file `google-login.html`.
+Of course, it can also be customized to look more interesting.
 
 ### The authorizer program and its config file
 
@@ -169,6 +164,19 @@ authorizing program is the Python program in this repo.
     completed and we've decided the user is not allowed. The static page
     `/googleauth/not-authorized.html` is returned.
 
+The Google login page does nothing but pop up a Google login popup using
+Google's JavaScript and their standard "Log in as <you>" button. For details,
+see Google's documentation
+[here](https://developers.google.com/identity/sign-in/web) and
+[here](https://developers.google.com/identity/gsi/web/guides/display-button).
+It is configured to invoke a Javascript function called `onSignIn` when the user
+has completed the login process.
+
+When the auth-complete callback is invoked, it stores the JSON Web Token in a
+cookie and redirects the client back to the URL in the `r` parameter. This will
+end up invoking the authorizer again---but this time with JWT's credentials
+stored in the request's cookie.
+
 The Python authorizer script looks for JSON Web Token in the client's
 cookiejar. If it's not found, it returns an HTTP 401, which tells nginx to start
 the auth flow. If found, it's verified using Google's oauth2 Python library, and
@@ -179,5 +187,8 @@ If the JWT is valid, the authorizer also re-encrypts the email address again
 using its own private key and sends the encrypted email back to the client as a
 new cookie. I wanted this extra step because Google's JWT expires after one
 hour, less than the length of a typical movie, and my use-case was serving
-video. The authorizer's own tokens never expire. (This may be a security hazard
-depending on what you're protecting.)
+video. The authorizer's own tokens never expire. This may be a security hazard
+depending on what you're protecting. However, the script can be easily changed
+to encrypt both the email address and an expiration date in its private token,
+instead.
+
