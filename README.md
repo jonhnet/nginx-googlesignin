@@ -115,7 +115,9 @@ Place the config file somewhere accessible. In my example, it's in `~/.config/ng
 
 Arrange to have the auth program run, e.g, by adding it to systemd using a
 configuration file such as [this
-one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth.service).
+one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth.service). Ensure
+that you pass `--config /path/to/config.yaml` to the script, giving it the
+location of the config file you created in the prior step.
 
 ### Troubleshooting
 
