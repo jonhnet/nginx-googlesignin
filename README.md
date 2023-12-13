@@ -81,10 +81,11 @@ Create the login page. A simple
 [example](https://github.com/jelson/nginx-googlesignin/blob/main/htmlroot/google-login-example.html)
 is included which does nothing but create a Google login popup.
 
-Make a copy of the example named `google-login.html`. Change the Google API
-Client ID in your copy to be the one you created in the first step.
+Make a copy of the example named `google-login.html`. In your copy, change the
+Google API Client ID (the `data-client_id` field) to Google Client ID you
+created in the first step.
 
-Of course, it can also be customized to look more interesting.
+Of course, the page itself can also be customized to look more interesting.
 
 ### The authorizer program and its config file
 
