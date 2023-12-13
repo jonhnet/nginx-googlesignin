@@ -2,34 +2,65 @@
 
 This is a simple Python program that makes it easy to serve a set of files with
 nginx that can only be accessed by authorized users, using Google accounts for
-authorization. Using google signin for auth lets you simply specify a list of
-email addresses of users allowed to access the site; they can then log in with
-their own Google passwords.
+authorization. Using Google signin for auth lets you simply specify a list of
+Google email addresses of users allowed to access the site; they can then log in
+with their own Google passwords. This relieves you of the responsibility of
+managing passwords.
 
 ## Setup
 
 ### Setting up a Google API Client ID
 
-For auth to work, you must first create a Client ID using Google's API
-console. Instructions can be found
+You must first create a Client ID using Google's API console. Instructions can
+be found
 [here](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid).
 Note that when you create a credential on the Google console, one field will be
 a list of "Authorized JavaScript origins". This must contain the complete URL of
-your site for the auth flow to work.
+your site for the auth flow to work. If you do not have the proper URL listed,
+the auth popup will just be an empty frame.
 
 The google client ID will look something like
-`123456789-abcde.apps.googleusercontent.com`. It needs to be specified in two
-steps below: in `google-login.html` and the configuration file for the Python
-authorizer.
+`123456789-abcde.apps.googleusercontent.com`. You'll need it in two steps below:
+in `google-login.html` and the configuration file for the Python authorizer.
 
 ### nginx config file
 
-An example config file can be found [here](https://github.com/jelson/nginx-googlesignin/blob/main/conf/nginx.conf).
+This module comes with two nginx configuration file snippets that you can
+include in your own nginx configuration file. The first,
+[nginx-requires-auth-snippet](https://github.com/jelson/nginx-googlesignin/blob/main/conf/nginx-requires-auth-snippet.conf),
+should be included inside any nginx `location` block whose contents should only
+be viewed by authorized users. The second,
+[nginx-provides-auth-snippet](https://github.com/jelson/nginx-googlesignin/blob/main/conf/nginx-provides-auth-snippet.conf),
+should be included in the `server` block of any server that uses the `requires`
+snippet. Here's a complete working example:
 
-The nginx config file's `location` block for the location that requires
-authorization has an `auth_request` directive, meaning any request first gets
-passed to the authorizing URL to ensure accessed is allowed. Details of this
-nginx feature can be found
+```
+server {
+    server_name example.com;
+    listen [::]:443 ssl;
+    listen 443 ssl;
+
+    location / {
+        alias /my/private/files;
+
+        include /home/jelson/projects/nginx-googleauth/conf/nginx-requires-auth-snippet.conf;
+    }
+
+    include /home/jelson/projects/nginx-googleauth/conf/nginx-provides-auth-snippet.conf;
+
+    ssl_certificate /my/cert/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /my/cert/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    access_log /var/log/nginx/access.log;
+    error_log  /var/log/nginx/error.log;
+}
+```
+
+The `requires_auth` snippet adds an `auth_request` directive, meaning any
+request first gets passed to the authorizing URL to ensure accessed is
+allowed. Details of this nginx feature can be found
 [here](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html). The
 authorizing program is the Python program in this repo.
 
@@ -37,20 +68,16 @@ authorizing program is the Python program in this repo.
 
   * If the authorizer returns an http 401 error, it means no credentials were
     found and the login flow should start; nginx is configured to generate a
-    redirect to the static page `google-login.html`. It also sets the URL
+    redirect to the static page `/googleauth/google-login.html`. It also sets the URL
     argument `r` to be the original URL on which access was attempted, and where
     the client will be redirected after auth is complete.
 
   * If the auth program returns 403, that means the login flow has been
     completed and we've decided the user is not allowed. The static page
-    `not-authorized.html` is returned.
+    `/googleauth/not-authorized.html` is returned.
 
-To adapt the example to your site, update
-  * server_name in the two places it appears
-
-  * SSL credentials (e.g., run certbot)
-
-  * logfile locations as desired
+To adapt the example to your site, change the path of the `include` directives
+to reflect where this repo is checked out on your system.
 
 ### google login flow
 
@@ -66,11 +93,11 @@ end up invoking the authorizer again -- but this time with JWT's credentials
 stored in the request's cookie.
 
 The example google login page must be changed to include the Google API Client
-ID you created in the first step.
+ID you created in the first step. Then rename the file `google-login.html`.
 
 ### authorizer and its config file
 
-The python authorizer script looks for JSON Web Token in the client's
+The Python authorizer script looks for JSON Web Token in the client's
 cookiejar. If it's not found, it returns an HTTP 401, which tells nginx to start
 the auth flow. If found, it's verified using Google's oauth2 Python library, and
 the email address it contains is checked against the list of allowed
@@ -86,10 +113,11 @@ depending on what you're protecting.)
 The authorizer is implemented as a
 [CherryPy](https://docs.cherrypy.dev/en/latest/) web service. A command-line
 option specifies a location of a configuration file. The repo contains an
-[example configuration](https://github.com/jelson/nginx-googlesignin/blob/main/conf/config-example.yaml). It needs:
+[example configuration](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth-config-example.yaml). It needs:
 
-* The port number on which to listen (default is 17000; it must match the proxy
-  statement in the nginx.conf).
+* The port number on which to listen. The default is 17000; if you change it,
+  make sure to also change the proxy_pass directive in
+  `nginx-provides-auth-snippet.conf`.
 
 * The Google API Client ID you created in the first step
 
@@ -100,5 +128,7 @@ option specifies a location of a configuration file. The repo contains an
 
 * A list of email addresses that are allowed
 
+Place the config file somewhere accessible. In my example, it's in `~/.config/nginx-googleauth/config.yaml`.
+
 You must also arrange to have the auth program run, e.g, by adding it to systemd
-using a configuration file such as [this one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/videoauth.service).
+using a configuration file such as [this one](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth.service).

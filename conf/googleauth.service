@@ -1,0 +1,12 @@
+[Unit]
+Description=nginx google auth checker
+StartLimitIntervalSec=0
+
+[Service]
+Restart=always
+RestartSec=30
+ExecStart=/home/jelson/projects/nginx-googleauth/auth/googleauth.py --config /home/jelson/.config/nginx-googleauth/config.yaml
+User=jelson
+
+[Install]
+WantedBy=multi-user.target

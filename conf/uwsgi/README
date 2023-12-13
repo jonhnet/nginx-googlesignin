@@ -1,0 +1,8 @@
+By default, the configuration files in "conf" are set up to run the
+googleauth.py script directly. googleauth.py uses CherryPy, which has a built-in
+web server that is fine for this purpose.
+
+However, if you expect high traffic you might want to use uwsgi as an
+application server instead. This directory has an example uwsgi configuration
+file, and an example systemd service configuration file showing how to invoke
+uswgi.

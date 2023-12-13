@@ -1,6 +1,6 @@
 ---
-listen-port: 17001
-oauth-client-id: your-clien.apps.googleusercontent.com
+listen-port: 17000
+oauth-client-id: your-client.apps.googleusercontent.com
 # Generate the key below with:
 # from cryptography.fernet import Fernet
 # Fernet.generate_key()

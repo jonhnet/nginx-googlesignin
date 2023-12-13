@@ -17,7 +17,7 @@ def say(s):
     sys.stdout.write(f"{s}\n")
     sys.stdout.flush()
 
-class VideoAuth():
+class NginxGoogleAuth():
     def __init__(self, args):
         self.args = args
         self.config = yaml.safe_load(open(args.config_file))
@@ -143,15 +143,17 @@ def get_args():
     return parser.parse_args()
 
 def run_server(args):
+    server = NginxGoogleAuth(args)
+
     cherrypy.config.update({
         'server.socket_host': '::',
-        'server.socket_port': config['listen-port'],
+        'server.socket_port': server.config['listen-port'],
         'server.socket_timeout': 30,
         'tools.proxy.on': True,
         'engine.autoreload.on': False,
     })
 
-    cherrypy.quickstart(VideoAuth(args), '/auth')
+    cherrypy.quickstart(NginxGoogleAuth(args))
 
 
 ### main
@@ -162,5 +164,5 @@ if __name__ == "__main__":
     run_server(args)
 
 def application(environ, start_response):
-    cherrypy.tree.mount(VideoAuth(args), '/auth')
+    cherrypy.tree.mount(NginxGoogleAuth(args))
     return cherrypy.tree(environ, start_response)

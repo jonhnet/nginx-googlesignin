@@ -1,0 +1,12 @@
+[Unit]
+Description=Google credentials checker
+StartLimitIntervalSec=0
+
+[Service]
+Restart=always
+RestartSec=30
+ExecStart=uwsgi --ini /home/jelson/projects/nginx-googleauth/conf/uwsgi/googleauth-uwsgi.conf --stats 127.0.0.1:9191
+User=jelson
+
+[Install]
+WantedBy=multi-user.target
