@@ -19,7 +19,7 @@ a list of "Authorized JavaScript origins". This must contain the complete URL of
 your site for the auth flow to work. If you do not have the proper URL listed,
 the auth popup will just be an empty frame.
 
-The google client ID will look something like
+The Google client ID will look something like
 `123456789-abcde.apps.googleusercontent.com`. You'll need it in two steps below:
 in `google-login.html` and the configuration file for the Python authorizer.
 
@@ -79,9 +79,9 @@ authorizing program is the Python program in this repo.
 To adapt the example to your site, change the path of the `include` directives
 to reflect where this repo is checked out on your system.
 
-### google login flow
+### Google login flow
 
-The google login page (example [here](https://github.com/jelson/nginx-googlesignin/blob/main/htmlroot/google-login-example.html)) creates a google signin popup that
+The Google login page (example [here](https://github.com/jelson/nginx-googlesignin/blob/main/htmlroot/google-login-example.html)) creates a google signin popup that
 calls a Javascript callback to `onSignIn` when the auth flow is complete.  For
 details, see Google's documentation
 [here](https://developers.google.com/identity/sign-in/web) and
@@ -92,7 +92,7 @@ cookie and redirects the client back to the URL in the `r` parameter. This will
 end up invoking the authorizer again -- but this time with JWT's credentials
 stored in the request's cookie.
 
-The example google login page must be changed to include the Google API Client
+The example Google login page must be changed to include the Google API Client
 ID you created in the first step. Then rename the file `google-login.html`.
 
 ### authorizer and its config file
