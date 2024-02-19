@@ -94,6 +94,10 @@ The authorizer is implemented as a
 option specifies a location of a configuration file. The repo contains an
 [example configuration](https://github.com/jelson/nginx-googlesignin/blob/main/conf/googleauth-config-example.yaml). It needs:
 
+* The Google Auth python module:
+
+  `apt install python3-google-auth`
+
 * The port number on which to listen. The default is 17000; if you change it,
   make sure to also change the proxy_pass directive in
   `nginx-provides-auth-snippet.conf`.
